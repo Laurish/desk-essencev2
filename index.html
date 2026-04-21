@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desk Essence — Blueprint / Patent No. 04-7821</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=JetBrains+Mono:wght@300;400;500;700&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #e8e1cc;          /* cream / blueprint paper */
+    --paper-dark: #d9d0b5;
+    --ink: #12315c;             /* cyanotype deep blue */
+    --ink-2: #1e4b8a;
+    --ink-3: #3a6cab;
+    --ink-faint: #8ba6c8;
+    --line: #1e4b8a;
+    --grid: #1e4b8a26;
+    --grid-strong: #1e4b8a4d;
+    --alert: #c13c1f;           /* red — callouts and stamps */
+    --paper-warm: #efe9d6;
+    --mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+    --display: 'Major Mono Display', 'Major Mono', 'Courier New', monospace;
+    --syne: 'Syne Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { cursor: none; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: 0 0;
+  }
+
+  /* --- paper grain overlay --- */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 300;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.07  0 0 0 0 0.19  0 0 0 0 0.36  0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.35'/></svg>");
+    mix-blend-mode: multiply;
+    opacity: 0.55;
+  }
+
+  /* --- custom crosshair cursor --- */
+  .crosshair {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    width: 40px; height: 40px;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: multiply;
+  }
+  .crosshair::before, .crosshair::after {
+    content: ""; position: absolute; background: var(--ink);
+  }
+  .crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+  .crosshair::after { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+  .crosshair .dot {
+    position: absolute; inset: 50%;
+    width: 6px; height: 6px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .crosshair .coord {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(14px, 12px);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  a, button { cursor: none; }
+
+  /* --- Page chrome --- */
+  .chrome {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--paper);
+    border-bottom: 1px solid var(--ink);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .chrome-title {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .chrome-title .patent {
+    border: 1px solid var(--ink);
+    padding: 4px 8px;
+    font-weight: 700;
+  }
+  .chrome-title .name {
+    font-family: var(--display);
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: none;
+  }
+  .chrome-sub {
+    color: var(--ink-2);
+    font-size: 10px;
+    opacity: 0.8;
+  }
+  .tabs {
+    display: flex; gap: 2px;
+    margin-left: auto;
+  }
+  .tab {
+    background: transparent;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: none;
+    font-weight: 500;
+  }
+  .tab:hover { background: var(--ink-faint); }
+  .tab.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* --- Canvas --- */
+  .canvas {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 40px 24px 120px;
+    position: relative;
+  }
+
+  .sheet {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    position: relative;
+    margin-bottom: 80px;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px);
+    background-size: 32px 32px, 32px 32px, 160px 160px, 160px 160px;
+  }
+
+  /* corner tick marks */
+  .sheet::before, .sheet::after,
+  .sheet .c-tl, .sheet .c-tr, .sheet .c-bl, .sheet .c-br {
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 0 solid var(--ink);
+  }
+  .sheet .c-tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-right: 0; border-bottom: 0; background: var(--paper); }
+  .sheet .c-tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; background: var(--paper); }
+  .sheet .c-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; background: var(--paper); }
+  .sheet .c-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; background: var(--paper); }
+
+  .sheet-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    border-bottom: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .sheet-header > div {
+    padding: 10px 16px;
+    border-right: 1px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sheet-header > div:last-child { border-right: none; }
+  .sheet-header .label { color: var(--ink-3); font-size: 9px; }
+  .sheet-header .value { color: var(--ink); font-weight: 500; }
+
+  .sheet-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .sheet-footer > div {
+    padding: 10px 16px;
+    border-right: 1px solid var(--ink);
+  }
+  .sheet-footer > div:last-child { border-right: none; }
+
+  .sheet-body {
+    padding: 40px;
+    position: relative;
+  }
+
+  /* --- Typography --- */
+  h1.figure-title {
+    font-family: var(--display);
+    font-size: 64px;
+    line-height: 0.95;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    margin: 0;
+    color: var(--ink);
+    text-transform: lowercase;
+  }
+  h1.figure-title .line {
+    display: block;
+    overflow: hidden;
+  }
+  h1.figure-title .line span {
+    display: inline-block;
+    transform: translateY(0);
+    transition: transform 0.6s cubic-bezier(.2,.9,.3,1);
+  }
+
+  h2.section-h {
+    font-family: var(--display);
+    font-size: 28px;
+    line-height: 1.05;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    margin: 0 0 20px;
+    text-transform: lowercase;
+  }
+  h3.part-h {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  p.body, .body {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink);
+    margin: 0;
+  }
+  .small {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .tiny {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* --- Figure / diagram --- */
+  .figure {
+    position: relative;
+    border: 1px solid var(--ink);
+    background: var(--paper-warm);
+    overflow: visible;
+  }
+  .figure .caption {
+    position: absolute;
+    bottom: -22px;
+    left: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .figure .caption strong {
+    color: var(--ink);
+    margin-right: 8px;
+  }
+
+  .figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    /* cyanotype treatment */
+    filter: grayscale(1) contrast(1.2) brightness(0.9);
+    mix-blend-mode: multiply;
+    opacity: 0.9;
+  }
+  .figure .tint {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    mix-blend-mode: screen;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* --- Callouts / annotations --- */
+  .callout {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .callout .num {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .callout .txt {
+    white-space: nowrap;
+    background: var(--paper);
+    padding: 2px 6px;
+  }
+  .callout svg {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  /* --- Measurement lines --- */
+  .measure {
+    position: absolute;
+    color: var(--ink);
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .measure.h {
+    height: 1px;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .measure.h::before, .measure.h::after {
+    content: ""; width: 1px; height: 12px; background: var(--ink);
+    position: absolute; top: -5px;
+  }
+  .measure.h::before { left: 0; }
+  .measure.h::after { right: 0; }
+  .measure.h .v {
+    background: var(--paper);
+    padding: 0 6px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .measure.v {
+    width: 1px;
+    background: var(--ink);
+  }
+  .measure.v::before, .measure.v::after {
+    content: ""; height: 1px; width: 12px; background: var(--ink);
+    position: absolute; left: -5px;
+  }
+  .measure.v::before { top: 0; }
+  .measure.v::after { bottom: 0; }
+  .measure.v .v {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--paper);
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  /* --- Stamps --- */
+  .stamp {
+    position: absolute;
+    border: 2.5px solid var(--alert);
+    color: var(--alert);
+    font-family: var(--mono);
+    font-weight: 700;
+    padding: 8px 14px;
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    transform: rotate(-8deg);
+    opacity: 0.82;
+    pointer-events: none;
+  }
+  .stamp.blue {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .stamp .sub {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* --- Button / CTA: looks like a punched card --- */
+  .punch-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 28px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 500;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    text-decoration: none;
+    transition: all 0.15s;
+    cursor: none;
+  }
+  .punch-btn::before {
+    content: "";
+    position: absolute;
+    top: 4px; bottom: 4px; left: 4px;
+    width: 18px;
+    background-image: radial-gradient(circle, var(--ink) 2px, transparent 2.2px);
+    background-size: 18px 6px;
+    background-repeat: repeat-y;
+    background-position: center;
+    opacity: 0.6;
+  }
+  .punch-btn span.arrow {
+    font-family: var(--mono);
+    letter-spacing: 0;
+  }
+  .punch-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .punch-btn:hover::before {
+    background-image: radial-gradient(circle, var(--paper) 2px, transparent 2.2px);
+  }
+  .punch-btn.primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .punch-btn.primary::before {
+    background-image: radial-gradient(circle, var(--paper) 2px, transparent 2.2px);
+  }
+  .punch-btn.primary:hover {
+    background: var(--alert);
+    border-color: var(--alert);
+  }
+
+  /* --- Specs table --- */
+  .specs {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .specs tr { border-bottom: 1px dashed var(--ink-3); }
+  .specs td {
+    padding: 8px 4px;
+    vertical-align: top;
+    letter-spacing: 0.06em;
+  }
+  .specs td:first-child {
+    width: 44%;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+  .specs td:last-child { text-align: right; }
+
+  /* --- SVG cross-section diagram --- */
+  .diagram {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .diagram * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* --- Revisions --- */
+  .revisions {
+    border: 1px solid var(--ink);
+  }
+  .revisions .r {
+    display: grid;
+    grid-template-columns: 50px 80px 1fr 60px;
+    padding: 6px 12px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    border-bottom: 1px dashed var(--ink-3);
+  }
+  .revisions .r:last-child { border-bottom: none; }
+  .revisions .r.head {
+    background: var(--ink);
+    color: var(--paper);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  /* --- Price counter widget --- */
+  .calc {
+    border: 1.5px solid var(--ink);
+    padding: 24px;
+    background: var(--paper-warm);
+    position: relative;
+  }
+  .calc::before {
+    content: "FIG. 04 — PROFITABILITY ANALYSIS";
+    position: absolute;
+    top: -8px; left: 16px;
+    background: var(--paper);
+    padding: 0 8px;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+  }
+  .calc .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--ink-3);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .calc .row:last-of-type { border-bottom: none; }
+  .calc .row .label { color: var(--ink-2); }
+  .calc .row .val {
+    font-family: var(--display);
+    font-size: 22px;
+    text-transform: lowercase;
+  }
+  .calc .slider {
+    width: 100%;
+    height: 2px;
+    background: var(--ink);
+    position: relative;
+    margin: 16px 0 6px;
+  }
+  .calc .slider input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    margin: 0;
+    cursor: none;
+  }
+  .calc .slider input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--alert);
+    border: 1.5px solid var(--paper);
+    box-shadow: 0 0 0 1.5px var(--ink);
+    cursor: none;
+    margin-top: -7px;
+  }
+  .calc .slider input::-moz-range-thumb {
+    width: 16px; height: 16px;
+    background: var(--alert);
+    border: 1.5px solid var(--paper);
+    cursor: none;
+  }
+  .calc .scale {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--ink-3);
+    letter-spacing: 0.1em;
+  }
+  .calc .savings {
+    font-family: var(--display);
+    font-size: 56px;
+    line-height: 1;
+    text-align: center;
+    padding: 20px 0;
+    color: var(--alert);
+    letter-spacing: 0.02em;
+  }
+
+  /* --- Interactive draggable foot-angle widget --- */
+  .sim {
+    border: 1.5px solid var(--ink);
+    padding: 20px;
+    background: var(--paper-warm);
+    position: relative;
+  }
+  .sim-stage {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+    border-bottom: 1px dashed var(--ink);
+  }
+  .sim-controls {
+    display: flex;
+    gap: 4px;
+    margin-top: 12px;
+  }
+  .sim-controls button {
+    flex: 1;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: none;
+  }
+  .sim-controls button.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .sim-readout {
+    margin-top: 10px;
+    font-family: var(--display);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  /* --- Testimonial as lab-report entry --- */
+  .logbook {
+    border: 1px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .logbook .e {
+    padding: 14px 16px;
+    border-bottom: 1px dashed var(--ink-3);
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .logbook .e:last-child { border-bottom: none; }
+  .logbook .date {
+    color: var(--ink-2);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .logbook .text { line-height: 1.6; }
+  .logbook .signed {
+    display: block;
+    font-size: 9px;
+    color: var(--ink-3);
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* --- Variant panel show/hide --- */
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* --- Tweaks panel --- */
+  .tweaks {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 14px 16px;
+    min-width: 240px;
+    display: none;
+    z-index: 200;
+    font-family: var(--mono);
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+  .tweaks.open { display: block; }
+  .tweaks h4 {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 400;
+    margin: 0 0 10px;
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .tweaks .row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .tweaks .row > span { min-width: 70px; color: var(--ink-2); }
+  .tweaks button {
+    flex: 1;
+    padding: 6px 10px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: none;
+  }
+  .tweaks button.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* --- Layout helpers --- */
+  .grid { display: grid; gap: 24px; }
+  .g-2 { grid-template-columns: 1fr 1fr; }
+  .g-3 { grid-template-columns: repeat(3, 1fr); }
+  .g-4 { grid-template-columns: repeat(4, 1fr); }
+  .g-7-5 { grid-template-columns: 7fr 5fr; }
+  .g-5-7 { grid-template-columns: 5fr 7fr; }
+
+  .row-flex { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 12px; }
+  .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; } .mt-32 { margin-top: 32px; } .mt-40 { margin-top: 40px; } .mt-48 { margin-top: 48px; } .mt-64 { margin-top: 64px; }
+  .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; } .mb-40 { margin-bottom: 40px; }
+
+  /* --- title line hover effect --- */
+  .hover-lift:hover {
+    background: var(--ink);
+    color: var(--paper);
+    transition: background 0.1s, color 0.1s;
+  }
+
+  /* --- corner stamps layout --- */
+  .corner-stamps {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    display: flex;
+    gap: 40px;
+    z-index: 5;
+  }
+</style>
+</head>
+<body data-screen-label="Desk Essence Blueprint">
+
+<!-- crosshair cursor -->
+<div class="crosshair" id="crosshair">
+  <div class="dot"></div>
+  <div class="coord" id="coord">X:0000 Y:0000</div>
+</div>
+
+<!-- Page chrome -->
+<div class="chrome">
+  <div class="chrome-title">
+    <div class="patent">PAT. 04–7821</div>
+    <div>
+      <div class="name">desk·essence</div>
+      <div class="chrome-sub">CLASSIFIED · ERGONOMIC FOOTREST · CYANOTYPE DRAFT</div>
+    </div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-v="1" data-i18n="tab1">SHEET 01 / PATENT</button>
+    <button class="tab" data-v="2" data-i18n="tab2">SHEET 02 / SECTION</button>
+    <button class="tab" data-v="3" data-i18n="tab3">SHEET 03 / MANUAL</button>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <!-- =============================== -->
+  <!-- SHEET 01 — PATENT APPLICATION   -->
+  <!-- =============================== -->
+  <section class="variant active" data-v="1" data-screen-label="01 Patent Sheet">
+    <div class="sheet">
+      <span class="c-tl"></span><span class="c-tr"></span><span class="c-bl"></span><span class="c-br"></span>
+
+      <!-- Title block -->
+      <div class="sheet-header">
+        <div>
+          <span class="label" data-i18n="sh_title">Title of drawing</span>
+          <span class="value" data-i18n="sh_title_v">ERGONOMIC APPARATUS FOR THE PROLONGED SEATED HUMAN</span>
+        </div>
+        <div>
+          <span class="label" data-i18n="sh_filing">Filing</span>
+          <span class="value">14 · IV · 2026</span>
+        </div>
+        <div>
+          <span class="label" data-i18n="sh_inventor">Inventor</span>
+          <span class="value">DESK ESSENCE AB</span>
+        </div>
+        <div>
+          <span class="label" data-i18n="sh_sheet">Sheet</span>
+          <span class="value">01 / 03</span>
+        </div>
+      </div>
+
+      <div class="sheet-body">
+
+        <!-- stamps -->
+        <div class="corner-stamps">
+          <div class="stamp blue" style="position: static; transform: rotate(-6deg);">IN STOCK<span class="sub" data-i18n="stamp_ship">SHIPS WITHIN 24H</span></div>
+          <div class="stamp" style="position: static; transform: rotate(4deg);">30 DAGAR<span class="sub" data-i18n="stamp_return">ÖPPET KÖP</span></div>
+        </div>
+
+        <!-- Title -->
+        <h1 class="figure-title" style="max-width: 20ch;">
+          <span class="line"><span class="hover-lift" data-i18n="h1_1">apparatus</span></span>
+          <span class="line"><span class="hover-lift" data-i18n="h1_2">for the</span></span>
+          <span class="line"><span class="hover-lift" data-i18n="h1_3">resting</span></span>
+          <span class="line"><span class="hover-lift" data-i18n="h1_4">foot. no. 04.</span></span>
+        </h1>
+
+        <div class="grid g-7-5 mt-48" style="gap: 48px;">
+          <!-- Fig 01: perspective -->
+          <div class="figure" style="height: 440px;">
+            <div class="tint"></div>
+            <img src="assets/product-hero.jpg" alt="Desk Essence fig. 01">
+
+            <!-- callouts overlay -->
+            <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <line x1="28" y1="30" x2="55" y2="40" stroke="#12315c" stroke-width="0.3" vector-effect="non-scaling-stroke" />
+              <line x1="22" y1="68" x2="50" y2="60" stroke="#12315c" stroke-width="0.3" vector-effect="non-scaling-stroke" />
+              <line x1="78" y1="38" x2="62" y2="45" stroke="#12315c" stroke-width="0.3" vector-effect="non-scaling-stroke" />
+              <line x1="82" y1="72" x2="68" y2="62" stroke="#12315c" stroke-width="0.3" vector-effect="non-scaling-stroke" />
+            </svg>
+
+            <div class="callout" style="top: 24%; left: -6%;">
+              <span class="num">A</span>
+              <span class="txt" data-i18n="co_a">Sammets-hylsa · Ø 420 mm</span>
+            </div>
+            <div class="callout" style="top: 62%; left: -6%;">
+              <span class="num">B</span>
+              <span class="txt" data-i18n="co_b">Minnesskum-kärna, 60 kg/m³</span>
+            </div>
+            <div class="callout" style="top: 32%; right: -2%; flex-direction: row-reverse;">
+              <span class="num">C</span>
+              <span class="txt" data-i18n="co_c">Fleece-ficka · gömd öppning</span>
+            </div>
+            <div class="callout" style="top: 68%; right: -2%; flex-direction: row-reverse;">
+              <span class="num">D</span>
+              <span class="txt" data-i18n="co_d">Halkfri bas · silikon-noppor</span>
+            </div>
+
+            <!-- measurement bottom -->
+            <div class="measure h" style="bottom: -30px; left: 0; right: 0;">
+              <span class="v">L ≈ 420 MM</span>
+            </div>
+            <div class="caption"><strong data-i18n="fig1">FIG. 01</strong><span data-i18n="fig1_c">PERSPEKTIV · RESTING POSITION</span></div>
+          </div>
+
+          <!-- side: abstract / claims -->
+          <div class="col" style="gap: 24px;">
+            <div>
+              <h3 class="part-h" data-i18n="abs">[ 0·1 ] abstract</h3>
+              <p class="body" data-i18n="abs_p">En anordning som lindrar den moderna människans tysta lidande — dinglande fötter under skrivbordet. Bestående av (A) sammets-hylsa, (B) minnesskum-kärna av terapeutisk densitet, (C) ficka för kall fot, samt (D) antiglid-bas. Justerbar i två höjder.</p>
+            </div>
+
+            <div>
+              <h3 class="part-h" data-i18n="claims">[ 0·2 ] claims</h3>
+              <p class="body" style="font-size: 12px;">
+                <span data-i18n="cl_1">i. Reducerar tryck på knäveck med 62 %.</span><br>
+                <span data-i18n="cl_2">ii. Ökar mikrorörelse i underben ≈ 3.4 ggr.</span><br>
+                <span data-i18n="cl_3">iii. Överdrag avtagbart, 40 °C kulörtvätt.</span><br>
+                <span data-i18n="cl_4">iv. Tål 10 000 h kontinuerlig belastning.</span>
+              </p>
+            </div>
+
+            <!-- Price / action -->
+            <div style="border: 1.5px solid var(--ink); padding: 20px; position: relative;">
+              <div class="tiny" style="position: absolute; top: -7px; left: 12px; background: var(--paper); padding: 0 8px;" data-i18n="cost_label">[ 0·3 ] UNIT COST</div>
+              <div class="row-flex" style="justify-content: space-between; gap: 8px;">
+                <div>
+                  <div class="figure-title" style="font-size: 44px;" data-i18n="price">699 sek</div>
+                  <div class="tiny mt-16" data-i18n="price_sub">exkl. frakt · ink. moms</div>
+                </div>
+                <a class="punch-btn primary" data-i18n="cta1"><span data-i18n="cta1_t">beställ enhet</span><span class="arrow">→</span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revisions log -->
+        <div class="grid g-2 mt-64" style="gap: 32px;">
+          <div>
+            <h3 class="part-h" data-i18n="rev_h">[ 0·4 ] revisions</h3>
+            <div class="revisions">
+              <div class="r head">
+                <span>REV.</span><span data-i18n="rev_date">DATE</span><span data-i18n="rev_change">CHANGE</span><span data-i18n="rev_by">BY</span>
+              </div>
+              <div class="r"><span>A</span><span>11·I·2024</span><span data-i18n="rev_1">Första prototyp — skumgummi.</span><span>T.L.</span></div>
+              <div class="r"><span>B</span><span>03·V·2024</span><span data-i18n="rev_2">Bytte till minnesskum, +8° vinkel.</span><span>T.L.</span></div>
+              <div class="r"><span>C</span><span>22·XI·2024</span><span data-i18n="rev_3">Lade till fleece-ficka efter testpanel.</span><span>M.E.</span></div>
+              <div class="r"><span>D</span><span>08·II·2025</span><span data-i18n="rev_4">Halkfri bas — silikon-noppor införda.</span><span>M.E.</span></div>
+              <div class="r"><span>E</span><span>14·IV·2026</span><span data-i18n="rev_5">Produktion godkänd. Lansering Q2.</span><span>T.L.</span></div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="part-h" data-i18n="spec_h">[ 0·5 ] specifications</h3>
+            <table class="specs">
+              <tr><td data-i18n="sp_mat">Material, hylsa</td><td data-i18n="sp_mat_v">Sammet, 240 g/m² · dragkedja YKK</td></tr>
+              <tr><td data-i18n="sp_core">Kärna</td><td data-i18n="sp_core_v">Minnesskum · 60 kg/m³</td></tr>
+              <tr><td data-i18n="sp_height">Höjdlägen</td><td data-i18n="sp_height_v">100 mm / 170 mm</td></tr>
+              <tr><td data-i18n="sp_weight">Vikt</td><td data-i18n="sp_weight_v">1.4 kg</td></tr>
+              <tr><td data-i18n="sp_origin">Ursprung</td><td data-i18n="sp_origin_v">Designad i Stockholm. Tillverkad i Portugal.</td></tr>
+              <tr><td data-i18n="sp_war">Garanti</td><td data-i18n="sp_war_v">12 mån mot fabrikationsfel</td></tr>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sheet-footer">
+        <div><span class="tiny">DESK ESSENCE AB</span> <span style="opacity:.6">· ORGNR 559XXX-XXXX</span></div>
+        <div data-i18n="ft_scale">SKALA · 1:4</div>
+        <div data-i18n="ft_unit">ENHET · MM</div>
+        <div data-i18n="ft_file">FIL · 04·7821_S01.dwg</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================== -->
+  <!-- SHEET 02 — SECTION + SIMULATION -->
+  <!-- =============================== -->
+  <section class="variant" data-v="2" data-screen-label="02 Cross-Section">
+    <div class="sheet">
+      <span class="c-tl"></span><span class="c-tr"></span><span class="c-bl"></span><span class="c-br"></span>
+
+      <div class="sheet-header">
+        <div><span class="label" data-i18n="sh_title">Title of drawing</span><span class="value" data-i18n="sh2_title">CROSS-SECTION · INTERACTIVE DEMONSTRATION</span></div>
+        <div><span class="label" data-i18n="sh_filing">Filing</span><span class="value">14 · IV · 2026</span></div>
+        <div><span class="label" data-i18n="sh_inventor">Inventor</span><span class="value">DESK ESSENCE AB</span></div>
+        <div><span class="label" data-i18n="sh_sheet">Sheet</span><span class="value">02 / 03</span></div>
+      </div>
+
+      <div class="sheet-body">
+        <h2 class="section-h" data-i18n="sh2_h">fig. 02 — sektion a·a'</h2>
+        <p class="body mb-24" style="max-width: 60ch;" data-i18n="sh2_p">Snittvy med inre struktur. Testpanelen (n=128) rapporterade en genomsnittlig 47-procentig minskning av upplevd tyngd i fötterna efter 8 h användning per dag i 21 dagar.</p>
+
+        <div class="grid g-5-7 mt-32" style="gap: 48px;">
+
+          <!-- Simulation widget -->
+          <div class="sim">
+            <div class="tiny mb-16" data-i18n="sim_h">[ INTERAKTIV ] · VÄLJ HÖJDLÄGE</div>
+            <div class="sim-stage">
+              <svg viewBox="0 0 300 280" class="diagram" id="simSvg">
+                <!-- Ground line -->
+                <line x1="0" y1="260" x2="300" y2="260" stroke="#12315c" stroke-width="1"/>
+                <!-- hatched floor -->
+                <defs>
+                  <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="8" stroke="#12315c" stroke-width="0.6"/>
+                  </pattern>
+                </defs>
+                <rect x="0" y="260" width="300" height="20" fill="url(#hatch)"/>
+
+                <!-- desk -->
+                <line x1="30" y1="40" x2="270" y2="40" stroke="#12315c" stroke-width="1.4"/>
+                <line x1="34" y1="40" x2="34" y2="260" stroke="#12315c" stroke-width="1" stroke-dasharray="2 3" opacity="0.4"/>
+                <line x1="266" y1="40" x2="266" y2="260" stroke="#12315c" stroke-width="1" stroke-dasharray="2 3" opacity="0.4"/>
+                <text x="150" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#12315c" letter-spacing="1">SKRIVBORDSKANT · 720 MM</text>
+
+                <!-- leg (simplified) -->
+                <g id="legGroup" transform="translate(150, 40)">
+                  <!-- thigh -->
+                  <line x1="0" y1="0" x2="-14" y2="90" stroke="#12315c" stroke-width="3" stroke-linecap="round"/>
+                  <!-- shin, pivot at knee -->
+                  <g id="shinGroup" transform="translate(-14, 90) rotate(0)">
+                    <line x1="0" y1="0" x2="0" y2="100" stroke="#12315c" stroke-width="3" stroke-linecap="round"/>
+                    <!-- foot -->
+                    <g id="footGroup" transform="translate(0, 100) rotate(90)">
+                      <rect x="-6" y="-4" width="52" height="8" fill="#12315c" rx="2"/>
+                    </g>
+                  </g>
+                </g>
+
+                <!-- The footrest -->
+                <g id="restGroup" transform="translate(110, 230)">
+                  <polygon points="0,0 90,0 90,-30 0,-10" fill="#12315c" fill-opacity="0.15" stroke="#12315c" stroke-width="1.2"/>
+                  <!-- memory foam texture -->
+                  <line x1="6" y1="-4" x2="84" y2="-22" stroke="#12315c" stroke-width="0.5" stroke-dasharray="1 2"/>
+                  <line x1="12" y1="-4" x2="80" y2="-18" stroke="#12315c" stroke-width="0.5" stroke-dasharray="1 2"/>
+                </g>
+
+                <!-- Angle readout -->
+                <text x="150" y="265" text-anchor="middle" font-family="Major Mono Display" font-size="14" fill="#c13c1f" id="angleText">0°</text>
+              </svg>
+            </div>
+            <div class="sim-controls">
+              <button data-mode="off" class="active" data-i18n="sim_off">INGET STÖD</button>
+              <button data-mode="low" data-i18n="sim_low">LÅGT · 100MM</button>
+              <button data-mode="high" data-i18n="sim_high">HÖGT · 170MM</button>
+            </div>
+            <div class="sim-readout" id="simReadout" data-i18n="sim_r_off">— fötter dinglar, tryck på knäveck</div>
+          </div>
+
+          <!-- Cross section diagram -->
+          <div>
+            <div class="figure" style="height: 380px; padding: 20px; background: var(--paper-warm);">
+              <svg viewBox="0 0 400 300" class="diagram">
+                <defs>
+                  <pattern id="foamHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="6" stroke="#12315c" stroke-width="0.5" opacity="0.6"/>
+                  </pattern>
+                  <pattern id="velvetHatch" width="4" height="4" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="0.6" fill="#12315c"/>
+                  </pattern>
+                  <pattern id="fleeceHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+                    <line x1="0" y1="0" x2="5" y2="0" stroke="#12315c" stroke-width="0.5" opacity="0.5"/>
+                  </pattern>
+                </defs>
+
+                <!-- outer velvet -->
+                <path d="M 50 230 Q 50 60, 200 60 Q 350 60, 350 230 L 340 240 L 60 240 Z"
+                      fill="url(#velvetHatch)" stroke="#12315c" stroke-width="1.5"/>
+                <!-- memory foam -->
+                <path d="M 70 225 Q 70 82, 200 82 Q 330 82, 330 225 L 320 232 L 80 232 Z"
+                      fill="url(#foamHatch)" stroke="#12315c" stroke-width="1"/>
+                <!-- fleece pocket -->
+                <path d="M 120 232 Q 120 160, 200 160 Q 280 160, 280 232 Z"
+                      fill="url(#fleeceHatch)" stroke="#12315c" stroke-width="1" stroke-dasharray="4 3"/>
+                <!-- base dots (silicone) -->
+                <circle cx="70" cy="244" r="3" fill="#12315c"/>
+                <circle cx="130" cy="248" r="3" fill="#12315c"/>
+                <circle cx="200" cy="250" r="3" fill="#12315c"/>
+                <circle cx="270" cy="248" r="3" fill="#12315c"/>
+                <circle cx="330" cy="244" r="3" fill="#12315c"/>
+
+                <!-- ground -->
+                <line x1="20" y1="258" x2="380" y2="258" stroke="#12315c" stroke-width="1.2"/>
+                <rect x="20" y="258" width="360" height="10" fill="url(#hatch)"/>
+
+                <!-- callouts -->
+                <g font-family="JetBrains Mono" font-size="10" fill="#12315c" letter-spacing="1">
+                  <!-- A velvet -->
+                  <line x1="200" y1="60" x2="200" y2="25" stroke="#12315c" stroke-width="0.8"/>
+                  <circle cx="200" cy="20" r="9" fill="#e8e1cc" stroke="#12315c" stroke-width="1.2"/>
+                  <text x="200" y="23" text-anchor="middle" font-weight="700">A</text>
+                  <text x="212" y="14" font-weight="700">SAMMET · 240 g/m²</text>
+
+                  <!-- B foam -->
+                  <line x1="120" y1="130" x2="20" y2="100" stroke="#12315c" stroke-width="0.8"/>
+                  <circle cx="20" cy="100" r="9" fill="#e8e1cc" stroke="#12315c" stroke-width="1.2"/>
+                  <text x="20" y="103" text-anchor="middle" font-weight="700">B</text>
+                  <text x="20" y="92" text-anchor="middle" font-weight="700">FOAM 60 kg/m³</text>
+
+                  <!-- C fleece -->
+                  <line x1="200" y1="200" x2="200" y2="290" stroke="#12315c" stroke-width="0.8" stroke-dasharray="2 2"/>
+                  <circle cx="200" cy="290" r="9" fill="#e8e1cc" stroke="#12315c" stroke-width="1.2"/>
+                  <text x="200" y="293" text-anchor="middle" font-weight="700">C</text>
+                  <text x="215" y="294" font-weight="700">FLEECE · GÖMD FICKA</text>
+
+                  <!-- D silicone -->
+                  <line x1="330" y1="244" x2="385" y2="220" stroke="#12315c" stroke-width="0.8"/>
+                  <circle cx="385" cy="215" r="9" fill="#e8e1cc" stroke="#12315c" stroke-width="1.2"/>
+                  <text x="385" y="218" text-anchor="middle" font-weight="700">D</text>
+                  <text x="385" y="205" text-anchor="end" font-weight="700">SILIKON ·</text>
+
+                  <!-- dimensions -->
+                  <line x1="50" y1="275" x2="350" y2="275" stroke="#12315c" stroke-width="0.6"/>
+                  <line x1="50" y1="271" x2="50" y2="279" stroke="#12315c" stroke-width="0.6"/>
+                  <line x1="350" y1="271" x2="350" y2="279" stroke="#12315c" stroke-width="0.6"/>
+                  <text x="200" y="288" text-anchor="middle">420 MM</text>
+                </g>
+              </svg>
+              <div class="caption"><strong data-i18n="fig2">FIG. 02</strong><span data-i18n="fig2_c">SEKTION A·A'  ·  SKALA 1:4</span></div>
+            </div>
+
+            <div class="row-flex mt-40" style="gap: 16px;">
+              <a class="punch-btn primary" data-i18n="cta2_a"><span data-i18n="cta2_at">beställ · 699 kr</span><span class="arrow">→</span></a>
+              <a class="punch-btn" data-i18n="cta2_b"><span data-i18n="cta2_bt">tekniskt datablad</span><span class="arrow">↓</span></a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cost analysis / calc -->
+        <div class="calc mt-64">
+          <div class="tiny mb-16" data-i18n="calc_h">[ RÄKNA UT DIN TILLBAKABETALNINGSTID ]</div>
+          <div class="grid g-2" style="gap: 32px;">
+            <div>
+              <div class="row">
+                <span class="label" data-i18n="calc_l1">Timmar vid skrivbord / dag</span>
+                <span class="val" id="calcHours">8</span>
+              </div>
+              <div class="slider">
+                <input type="range" min="2" max="14" value="8" id="calcSlider">
+              </div>
+              <div class="scale">
+                <span>2H</span><span>8H</span><span>14H</span>
+              </div>
+              <p class="body mt-16" style="font-size: 11px; line-height: 1.6; letter-spacing: 0.04em;" data-i18n="calc_p">Baserat på intern testpanel (n=128, april 2025). Obekväm sittställning beräknas kosta 7 min koncentrerad arbetstid per timme.</p>
+            </div>
+            <div>
+              <div class="tiny" data-i18n="calc_s">ESTIMERAD BESPARING / ÅR</div>
+              <div class="savings" id="calcSavings">≈ 7 040 kr</div>
+              <div class="row">
+                <span class="label" data-i18n="calc_r1">Återbetalningstid</span>
+                <span class="val" id="calcPayback">36 dagar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sheet-footer">
+        <div class="tiny">DESK ESSENCE AB</div>
+        <div data-i18n="ft_scale">SKALA · 1:4</div>
+        <div data-i18n="ft_unit">ENHET · MM</div>
+        <div data-i18n="ft_file2">FIL · 04·7821_S02.dwg</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================== -->
+  <!-- SHEET 03 — USER MANUAL          -->
+  <!-- =============================== -->
+  <section class="variant" data-v="3" data-screen-label="03 Manual">
+    <div class="sheet">
+      <span class="c-tl"></span><span class="c-tr"></span><span class="c-bl"></span><span class="c-br"></span>
+
+      <div class="sheet-header">
+        <div><span class="label" data-i18n="sh_title">Title of drawing</span><span class="value" data-i18n="sh3_title">USER MANUAL · OBSERVED PERFORMANCE IN FIELD</span></div>
+        <div><span class="label" data-i18n="sh_filing">Filing</span><span class="value">14 · IV · 2026</span></div>
+        <div><span class="label" data-i18n="sh_inventor">Inventor</span><span class="value">DESK ESSENCE AB</span></div>
+        <div><span class="label" data-i18n="sh_sheet">Sheet</span><span class="value">03 / 03</span></div>
+      </div>
+
+      <div class="sheet-body">
+        <h2 class="section-h" data-i18n="sh3_h">fig. 03 — bruksanvisning · protokoll</h2>
+
+        <div class="grid g-3 mt-24" style="gap: 32px;">
+
+          <!-- Step 01 -->
+          <div>
+            <div class="figure" style="height: 180px; background: var(--paper-warm); margin-bottom: 40px;">
+              <svg viewBox="0 0 200 180" class="diagram">
+                <rect x="30" y="100" width="140" height="50" fill="none" stroke="#12315c" stroke-width="1.4"/>
+                <line x1="30" y1="100" x2="50" y2="80" stroke="#12315c" stroke-width="1"/>
+                <line x1="170" y1="100" x2="190" y2="80" stroke="#12315c" stroke-width="1"/>
+                <line x1="50" y1="80" x2="190" y2="80" stroke="#12315c" stroke-width="1"/>
+                <line x1="170" y1="150" x2="190" y2="130" stroke="#12315c" stroke-width="1" stroke-dasharray="2 2"/>
+                <text x="100" y="40" text-anchor="middle" font-family="Major Mono Display" font-size="40" fill="#12315c">01</text>
+                <line x1="100" y1="50" x2="100" y2="95" stroke="#12315c" stroke-width="0.8" stroke-dasharray="2 2"/>
+              </svg>
+              <div class="caption"><strong>03·A</strong><span data-i18n="step1_c">PLACERING</span></div>
+            </div>
+            <h3 class="part-h mt-32" data-i18n="step1_h">[ steg 01 ] placering</h3>
+            <p class="body" data-i18n="step1_p">Placera enheten under skrivbordet, centrerat mellan stolsbenen. Halkfri bas kräver plant underlag — undvik ojämn matta.</p>
+          </div>
+
+          <!-- Step 02 -->
+          <div>
+            <div class="figure" style="height: 180px; background: var(--paper-warm); margin-bottom: 40px;">
+              <svg viewBox="0 0 200 180" class="diagram">
+                <!-- 2 height modes -->
+                <g transform="translate(40, 100)">
+                  <polygon points="0,30 50,30 50,10 0,20" fill="none" stroke="#12315c" stroke-width="1.4"/>
+                  <text x="25" y="50" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#12315c">LÅGT</text>
+                </g>
+                <g transform="translate(110, 80)">
+                  <polygon points="0,50 50,50 50,10 0,30" fill="none" stroke="#12315c" stroke-width="1.4"/>
+                  <text x="25" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#12315c">HÖGT</text>
+                </g>
+                <text x="100" y="30" text-anchor="middle" font-family="Major Mono Display" font-size="40" fill="#12315c">02</text>
+              </svg>
+              <div class="caption"><strong>03·B</strong><span data-i18n="step2_c">LÄGE</span></div>
+            </div>
+            <h3 class="part-h mt-32" data-i18n="step2_h">[ steg 02 ] välj läge</h3>
+            <p class="body" data-i18n="step2_p">Rotera enheten 180° för att växla mellan 100 mm (skrivbordsläge) och 170 mm (avlastningsläge). Byt läge ett par gånger om dagen.</p>
+          </div>
+
+          <!-- Step 03 -->
+          <div>
+            <div class="figure" style="height: 180px; background: var(--paper-warm); margin-bottom: 40px;">
+              <svg viewBox="0 0 200 180" class="diagram">
+                <text x="100" y="45" text-anchor="middle" font-family="Major Mono Display" font-size="40" fill="#12315c">03</text>
+                <!-- foot into pocket -->
+                <path d="M 40 110 Q 40 80, 100 80 Q 160 80, 160 110 L 150 130 L 50 130 Z"
+                      fill="none" stroke="#12315c" stroke-width="1.4"/>
+                <path d="M 60 118 L 140 118" stroke="#12315c" stroke-width="0.8" stroke-dasharray="3 2"/>
+                <!-- foot -->
+                <ellipse cx="100" cy="95" rx="24" ry="10" fill="none" stroke="#c13c1f" stroke-width="1.2"/>
+                <line x1="80" y1="100" x2="82" y2="118" stroke="#c13c1f" stroke-width="0.8" stroke-dasharray="2 1"/>
+                <line x1="120" y1="100" x2="118" y2="118" stroke="#c13c1f" stroke-width="0.8" stroke-dasharray="2 1"/>
+              </svg>
+              <div class="caption"><strong>03·C</strong><span data-i18n="step3_c">INSÄTTNING</span></div>
+            </div>
+            <h3 class="part-h mt-32" data-i18n="step3_h">[ steg 03 ] fleece-ficka</h3>
+            <p class="body" data-i18n="step3_p">Vid behov av värme — lossa sammets-hylsans dragkedja och glid in fötterna i den inre fleece-fickan. Särskilt effektiv i november.</p>
+          </div>
+        </div>
+
+        <!-- Field reports -->
+        <div class="grid g-5-7 mt-64" style="gap: 48px;">
+          <div>
+            <h2 class="section-h" data-i18n="field_h">fältrapport</h2>
+            <p class="body mb-24" data-i18n="field_p">Utvalda utdrag ur kundpanelens loggbok. Alla verifierade, anonymiserade, oredigerade.</p>
+
+            <div class="row-flex" style="gap: 20px;">
+              <div>
+                <div class="figure-title" style="font-size: 48px;">4·9</div>
+                <div class="tiny" data-i18n="field_rev">/ 5.0 · 2 431 recensioner</div>
+              </div>
+              <div>
+                <div class="figure-title" style="font-size: 48px;">128</div>
+                <div class="tiny" data-i18n="field_panel">deltagare i testpanel</div>
+              </div>
+            </div>
+
+            <div class="mt-40">
+              <a class="punch-btn primary" data-i18n="cta3"><span data-i18n="cta3_t">anslut till panelen · 699 kr</span><span class="arrow">→</span></a>
+            </div>
+          </div>
+
+          <div class="logbook">
+            <div class="e">
+              <div class="date">08·III·2026</div>
+              <div class="text">
+                <span data-i18n="log1">"Dag 14. Fötterna tidigare kalla redan kl. 10. Idag: fortfarande varma kl. 15. Kan inte förklara det. Fungerar bara."</span>
+                <span class="signed" data-i18n="log1_s">— Subjekt #017 · Anna, 34, UX</span>
+              </div>
+            </div>
+            <div class="e">
+              <div class="date">21·II·2026</div>
+              <div class="text">
+                <span data-i18n="log2">"Min fru sa att jag slutade sucka vid skrivbordet. Jag visste inte ens att jag suckade. Fotstödet kom i tisdags."</span>
+                <span class="signed" data-i18n="log2_s">— Subjekt #089 · Mikael, 47, civilingenjör</span>
+              </div>
+            </div>
+            <div class="e">
+              <div class="date">02·II·2026</div>
+              <div class="text">
+                <span data-i18n="log3">"Dygnsrytm normaliserad. Ryggsmärta i nedre lumbar reducerad från 6/10 till 2/10 på 3 veckor. Ingen annan variabel ändrad."</span>
+                <span class="signed" data-i18n="log3_s">— Subjekt #054 · Farida, 29, data-analytiker</span>
+              </div>
+            </div>
+            <div class="e">
+              <div class="date">15·I·2026</div>
+              <div class="text">
+                <span data-i18n="log4">"Min katt har gjort den till sitt. Har beställt ett till."</span>
+                <span class="signed" data-i18n="log4_s">— Subjekt #102 · Lars, 41, skribent</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Final stamps -->
+        <div class="mt-64" style="position: relative; height: 140px; border: 1px dashed var(--ink-3); padding: 20px;">
+          <div class="tiny" data-i18n="final_h">[ OBSERVANDUM ]</div>
+          <p class="body mt-16" style="max-width: 50ch;" data-i18n="final_p">Detta dokument är en fullständig produktbeskrivning. Det finns inget dolt. Ingen abonnemangsprenumeration. Ingen nyhetsbrevspopup. Ett fotstöd, i en låda, på din tröskel — inom 48 timmar.</p>
+          <div class="stamp" style="top: 20px; right: 40px;">APPROVED<span class="sub">04·IV·2026</span></div>
+          <div class="stamp blue" style="top: 64px; right: 160px; transform: rotate(6deg);">CE · ISO 9001<span class="sub" data-i18n="stamp_ce">COMPLIANT</span></div>
+        </div>
+
+      </div>
+
+      <div class="sheet-footer">
+        <div class="tiny">DESK ESSENCE AB</div>
+        <div data-i18n="ft_scale">SKALA · 1:4</div>
+        <div data-i18n="ft_unit">ENHET · MM</div>
+        <div data-i18n="ft_file3">FIL · 04·7821_S03.dwg</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- TWEAKS PANEL -->
+<div class="tweaks" id="tweaks">
+  <h4>tweaks</h4>
+  <div class="row">
+    <span>Språk</span>
+    <button class="lang-btn active" data-lang="sv">SV</button>
+    <button class="lang-btn" data-lang="en">EN</button>
+  </div>
+  <div class="row">
+    <span>Cursor</span>
+    <button class="cursor-btn active" data-cursor="on">Hårkors</button>
+    <button class="cursor-btn" data-cursor="off">Normal</button>
+  </div>
+</div>
+
+<script>
+  // --- TWEAK DEFAULTS ---
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "language": "sv",
+    "cursor": "on"
+  }/*EDITMODE-END*/;
+
+  let currentLang = TWEAK_DEFAULTS.language || 'sv';
+  let cursorMode = TWEAK_DEFAULTS.cursor || 'on';
+
+  // --- Crosshair cursor ---
+  const crosshair = document.getElementById('crosshair');
+  const coord = document.getElementById('coord');
+  function setCursorMode(mode) {
+    cursorMode = mode;
+    if (mode === 'on') {
+      document.documentElement.style.cursor = 'none';
+      document.querySelectorAll('*').forEach(el => { /* rely on CSS */ });
+      crosshair.style.display = 'block';
+    } else {
+      document.documentElement.style.cursor = 'auto';
+      crosshair.style.display = 'none';
+    }
+    document.querySelectorAll('.cursor-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.cursor === mode);
+    });
+  }
+  document.addEventListener('mousemove', (e) => {
+    if (cursorMode !== 'on') return;
+    crosshair.style.left = e.clientX + 'px';
+    crosshair.style.top = e.clientY + 'px';
+    const x = String(Math.round(e.clientX)).padStart(4, '0');
+    const y = String(Math.round(e.clientY)).padStart(4, '0');
+    coord.textContent = `X:${x} Y:${y}`;
+  });
+  document.querySelectorAll('.cursor-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      setCursorMode(b.dataset.cursor);
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { cursor: b.dataset.cursor } }, '*');
+    });
+  });
+  setCursorMode(cursorMode);
+
+  // --- Tab switching ---
+  const tabs = document.querySelectorAll('#tabs .tab');
+  const variants = document.querySelectorAll('.variant');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const v = tab.dataset.v;
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      variants.forEach(vn => vn.classList.toggle('active', vn.dataset.v === v));
+      localStorage.setItem('desk-essence-blueprint-variant', v);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  });
+  const savedV = localStorage.getItem('desk-essence-blueprint-variant');
+  if (savedV) {
+    const t = document.querySelector(`#tabs .tab[data-v="${savedV}"]`);
+    if (t) t.click();
+  }
+
+  // --- Simulation widget (leg + footrest) ---
+  const shinGroup = document.getElementById('shinGroup');
+  const footGroup = document.getElementById('footGroup');
+  const restGroup = document.getElementById('restGroup');
+  const angleText = document.getElementById('angleText');
+  const simReadout = document.getElementById('simReadout');
+
+  const simModes = {
+    off:  { shinRot: 0,  footRot: 90, restY: 230, restScale: 0, angle: '0°',  readoutKey: 'sim_r_off' },
+    low:  { shinRot: -4, footRot: 76, restY: 200, restScale: 1, angle: '14°', readoutKey: 'sim_r_low' },
+    high: { shinRot: -10, footRot: 66, restY: 170, restScale: 1.1, angle: '28°', readoutKey: 'sim_r_high' }
+  };
+  let currentMode = 'off';
+  function setSimMode(mode) {
+    currentMode = mode;
+    const m = simModes[mode];
+    shinGroup.setAttribute('transform', `translate(-14, 90) rotate(${m.shinRot})`);
+    footGroup.setAttribute('transform', `translate(0, 100) rotate(${m.footRot})`);
+    restGroup.setAttribute('transform', `translate(110, ${m.restY}) scale(${m.restScale})`);
+    restGroup.style.opacity = m.restScale === 0 ? 0 : 1;
+    restGroup.style.transition = 'all 0.4s cubic-bezier(.2,.9,.3,1)';
+    shinGroup.style.transition = 'all 0.4s cubic-bezier(.2,.9,.3,1)';
+    footGroup.style.transition = 'all 0.4s cubic-bezier(.2,.9,.3,1)';
+    angleText.textContent = m.angle;
+    simReadout.setAttribute('data-i18n', m.readoutKey);
+    simReadout.textContent = i18nText(m.readoutKey);
+    document.querySelectorAll('.sim-controls button').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+  }
+  document.querySelectorAll('.sim-controls button').forEach(b => {
+    b.addEventListener('click', () => setSimMode(b.dataset.mode));
+  });
+
+  // --- Cost calculator ---
+  const calcSlider = document.getElementById('calcSlider');
+  const calcHours = document.getElementById('calcHours');
+  const calcSavings = document.getElementById('calcSavings');
+  const calcPayback = document.getElementById('calcPayback');
+  function updateCalc() {
+    const h = parseInt(calcSlider.value);
+    calcHours.textContent = h;
+    // 7 min lost/hour * h hours * 220 work days / 60 * hourly value 300 kr (assumed)
+    const minutesSavedPerYear = 7 * h * 220;
+    const hoursSavedPerYear = minutesSavedPerYear / 60;
+    const savings = Math.round(hoursSavedPerYear * 300 / 100) * 100;
+    calcSavings.textContent = '≈ ' + savings.toLocaleString('sv-SE').replace(/,/g, ' ') + ' kr';
+    const paybackDays = Math.max(1, Math.round(699 / (savings / 220)));
+    const paybackKey = currentLang === 'en' ? 'days' : 'dagar';
+    calcPayback.textContent = paybackDays + ' ' + paybackKey;
+  }
+  if (calcSlider) calcSlider.addEventListener('input', updateCalc);
+
+  // --- i18n ---
+  const i18n = {
+    sv: {},
+    en: {
+      tab1: "SHEET 01 / PATENT",
+      tab2: "SHEET 02 / SECTION",
+      tab3: "SHEET 03 / MANUAL",
+
+      sh_title: "Title of drawing",
+      sh_title_v: "ERGONOMIC APPARATUS FOR THE PROLONGED SEATED HUMAN",
+      sh_filing: "Filing",
+      sh_inventor: "Inventor",
+      sh_sheet: "Sheet",
+
+      stamp_ship: "SHIPS WITHIN 24H",
+      stamp_return: "30 DAYS RETURN",
+      stamp_ce: "COMPLIANT",
+
+      h1_1: "apparatus",
+      h1_2: "for the",
+      h1_3: "resting",
+      h1_4: "foot. no. 04.",
+
+      co_a: "Velvet sleeve · Ø 420 mm",
+      co_b: "Memory foam core, 60 kg/m³",
+      co_c: "Fleece pocket · hidden opening",
+      co_d: "Non-slip base · silicone nubs",
+
+      fig1: "FIG. 01",
+      fig1_c: "PERSPECTIVE · RESTING POSITION",
+      fig2: "FIG. 02",
+      fig2_c: "SECTION A·A'  ·  SCALE 1:4",
+
+      abs: "[ 0·1 ] abstract",
+      abs_p: "A device that relieves the modern human's silent suffering — dangling feet beneath the desk. Consisting of (A) velvet sleeve, (B) memory foam core of therapeutic density, (C) pocket for cold foot, and (D) anti-slip base. Adjustable between two heights.",
+      claims: "[ 0·2 ] claims",
+      cl_1: "i. Reduces pressure on back of knee by 62%.",
+      cl_2: "ii. Increases micro-movement in lower leg ≈ 3.4×.",
+      cl_3: "iii. Cover removable, 40 °C gentle wash.",
+      cl_4: "iv. Withstands 10,000 h continuous load.",
+
+      cost_label: "[ 0·3 ] UNIT COST",
+      price: "€69",
+      price_sub: "excl. shipping · incl. VAT",
+      cta1_t: "order unit",
+
+      rev_h: "[ 0·4 ] revisions",
+      rev_date: "DATE",
+      rev_change: "CHANGE",
+      rev_by: "BY",
+      rev_1: "First prototype — polyurethane foam.",
+      rev_2: "Switched to memory foam, +8° angle.",
+      rev_3: "Added fleece pocket after test panel.",
+      rev_4: "Non-slip base — silicone nubs introduced.",
+      rev_5: "Approved for production. Launch Q2.",
+
+      spec_h: "[ 0·5 ] specifications",
+      sp_mat: "Material, sleeve",
+      sp_mat_v: "Velvet, 240 g/m² · YKK zipper",
+      sp_core: "Core",
+      sp_core_v: "Memory foam · 60 kg/m³",
+      sp_height: "Height modes",
+      sp_height_v: "100 mm / 170 mm",
+      sp_weight: "Weight",
+      sp_weight_v: "1.4 kg",
+      sp_origin: "Origin",
+      sp_origin_v: "Designed in Stockholm. Made in Portugal.",
+      sp_war: "Warranty",
+      sp_war_v: "12 mo. against manufacturing defects",
+
+      ft_scale: "SCALE · 1:4",
+      ft_unit: "UNIT · MM",
+      ft_file: "FILE · 04·7821_S01.dwg",
+      ft_file2: "FILE · 04·7821_S02.dwg",
+      ft_file3: "FILE · 04·7821_S03.dwg",
+
+      sh2_title: "CROSS-SECTION · INTERACTIVE DEMONSTRATION",
+      sh2_h: "fig. 02 — section a·a'",
+      sh2_p: "Cross-section view with internal structure. Test panel (n=128) reported an average 47% reduction in perceived foot heaviness after 8 h daily use over 21 days.",
+      sim_h: "[ INTERACTIVE ] · CHOOSE HEIGHT",
+      sim_off: "NO SUPPORT",
+      sim_low: "LOW · 100MM",
+      sim_high: "HIGH · 170MM",
+      sim_r_off: "— feet dangle, pressure on back of knee",
+      sim_r_low: "— 14° support, desk work mode",
+      sim_r_high: "— 28° elevation, circulation mode",
+      cta2_at: "order · €69",
+      cta2_bt: "technical datasheet",
+
+      calc_h: "[ CALCULATE YOUR PAYBACK PERIOD ]",
+      calc_l1: "Hours at desk / day",
+      calc_s: "ESTIMATED ANNUAL SAVINGS",
+      calc_r1: "Payback period",
+      calc_p: "Based on internal test panel (n=128, April 2025). Uncomfortable seating is estimated to cost 7 minutes of focused work time per hour.",
+
+      sh3_title: "USER MANUAL · OBSERVED PERFORMANCE IN FIELD",
+      sh3_h: "fig. 03 — user manual · protocol",
+      step1_c: "PLACEMENT",
+      step1_h: "[ step 01 ] placement",
+      step1_p: "Place the unit under your desk, centered between the chair legs. Non-slip base requires flat ground — avoid uneven rugs.",
+      step2_c: "MODE",
+      step2_h: "[ step 02 ] choose mode",
+      step2_p: "Rotate the unit 180° to switch between 100 mm (desk mode) and 170 mm (relief mode). Switch modes a few times a day.",
+      step3_c: "INSERTION",
+      step3_h: "[ step 03 ] fleece pocket",
+      step3_p: "When warmth is needed — unzip the velvet sleeve and slide your feet into the inner fleece pocket. Particularly effective in November.",
+
+      field_h: "field report",
+      field_p: "Selected excerpts from the customer panel logbook. All verified, anonymized, unedited.",
+      field_rev: "/ 5.0 · 2,431 reviews",
+      field_panel: "participants in test panel",
+      cta3_t: "join the panel · €69",
+
+      log1: "\"Day 14. Feet usually cold by 10 AM. Today: still warm at 3 PM. Cannot explain it. It just works.\"",
+      log1_s: "— Subject #017 · Anna, 34, UX",
+      log2: "\"My wife said I stopped sighing at the desk. I didn't even know I was sighing. The footrest arrived on Tuesday.\"",
+      log2_s: "— Subject #089 · Mikael, 47, engineer",
+      log3: "\"Sleep rhythm normalized. Lower lumbar pain reduced from 6/10 to 2/10 in 3 weeks. No other variable changed.\"",
+      log3_s: "— Subject #054 · Farida, 29, data analyst",
+      log4: "\"My cat has claimed it. Ordered another one.\"",
+      log4_s: "— Subject #102 · Lars, 41, writer",
+
+      final_h: "[ OBSERVANDUM ]",
+      final_p: "This document is a complete product description. Nothing is hidden. No subscription. No newsletter popup. One footrest, in a box, on your doorstep — within 48 hours."
+    }
+  };
+
+  // snapshot SV defaults from HTML
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    i18n.sv[el.dataset.i18n] = el.textContent;
+  });
+
+  function i18nText(key) {
+    return (i18n[currentLang] && i18n[currentLang][key] != null) ? i18n[currentLang][key] : (i18n.sv[key] || '');
+  }
+
+  function applyLang(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      const txt = i18nText(key);
+      if (txt) el.textContent = txt;
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    updateCalc();
+  }
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      applyLang(b.dataset.lang);
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { language: b.dataset.lang } }, '*');
+    });
+  });
+  applyLang(currentLang);
+  updateCalc();
+  setSimMode('off');
+
+  // --- Edit mode protocol ---
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === '__activate_edit_mode') {
+      document.getElementById('tweaks').classList.add('open');
+    } else if (e.data.type === '__deactivate_edit_mode') {
+      document.getElementById('tweaks').classList.remove('open');
+    }
+  });
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+</script>
+
+</body>
+</html>
